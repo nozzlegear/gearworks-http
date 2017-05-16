@@ -1,0 +1,8 @@
+index.ts
+test.ts
+bin/test.js
+bin/test.d.ts
+node_modules/
+tsconfig.json
+*.tgz
+*.log
