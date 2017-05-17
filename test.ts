@@ -3,26 +3,41 @@ import * as gwv from 'gearworks-validation';
 import * as joi from 'joi';
 import BaseClient, { ApiError, isOkay } from './';
 import {
+    AsyncSetup,
+    AsyncTeardown,
     AsyncTest,
     Expect,
     Test,
-    TestFixture
+    TestFixture,
+    Timeout
     } from 'alsatian';
 import { AxiosResponse } from 'axios';
+import { inspect } from 'logspect/bin';
+import { Server } from 'http';
+import Micro, * as MicroLib from "micro";
 
 interface TestObject {
     hello: string;
     foo: boolean;
     bar: number;
-    baz: string[];
+    array: string[];
 }
+
+interface ServerResponse {
+    body: TestObject;
+    headers: Object;
+}
+
+const customHeaderKey = "General-Kenobi";
+const customHeaderVal = "You are a bold one!";
+const skippedHeaderKey = "skip-this-header";
 
 function fakeAxiosResponse(error: boom.BoomError): AxiosResponse {
     return {
-        data: error.output.payload, 
-        config: undefined, 
-        headers: undefined, 
-        status: error.output.statusCode, 
+        data: error.output.payload,
+        config: undefined,
+        headers: undefined,
+        status: error.output.statusCode,
         statusText: "Bad Data"
     }
 }
@@ -37,14 +52,14 @@ export class ClientTestFixture extends BaseClient {
         hello: "world",
         foo: true,
         bar: 12,
-        baz: ["hello", "world"]
+        array: ["hello", "world"]
     }
 
     private ObjSchema = gwv.object<TestObject>({
         hello: gwv.string(),
         foo: gwv.boolean(),
         bar: gwv.number(),
-        baz: gwv.date() // Fail validation on this property
+        array: gwv.date() // Fail validation on this property
     })
 
     @Test()
@@ -75,13 +90,13 @@ export class ClientTestFixture extends BaseClient {
     }
 }
 
-@TestFixture("OverriddenClient tests") 
+@TestFixture("OverriddenClient tests")
 export class OverriddenClientTestFixture extends BaseClient {
     constructor() {
         super("https://example.com")
     }
 
-    get status() { 
+    get status() {
         return 66;
     }
 
@@ -93,7 +108,7 @@ export class OverriddenClientTestFixture extends BaseClient {
         return "I AM THE SENATE.";
     }
 
-    protected parseErrorResponse(body?: string | Object, axiosResponse?: AxiosResponse) { 
+    protected parseErrorResponse(body?: string | Object, axiosResponse?: AxiosResponse) {
         return new ApiError(this.status, this.description, this.message);
     }
 
@@ -104,6 +119,64 @@ export class OverriddenClientTestFixture extends BaseClient {
         Expect(error.status).toEqual(this.status);
         Expect(error.status_text).toEqual(this.description);
         Expect(error.message).toEqual(this.message);
+    }
+}
+
+@TestFixture("BaseClient request tests")
+export class BaseClientRequestTestFixture extends BaseClient {
+    constructor() {
+        super("http://localhost:4000", { [customHeaderKey]: customHeaderVal, [skippedHeaderKey]: undefined });
+    }
+
+    private Server: Server;
+
+    private get HeaderVal() {
+        return "You are a bold one!"
+    }
+
+    @AsyncSetup
+    async SetupServer() {
+        this.Server = Micro(async (req, res) => {
+            // Read the json and send it back with the headers.
+            const json = await MicroLib.json(req);
+            const headers = req.headers;
+            const response: ServerResponse = {
+                body: json as any,
+                headers: headers
+            };
+
+            return JSON.stringify(response);
+        })
+
+        this.Server.listen(4000);
+    }
+
+    @AsyncTeardown
+    async TeardownServer() {
+        this.Server.close();
+    }
+
+    @AsyncTest()
+    @Timeout(2000)
+    public async MakesRequests() {
+        const obj: TestObject = {
+            hello: "world",
+            foo: true,
+            bar: 10,
+            array: ["hello", "world"]
+        }
+        const response = await this.sendRequest<ServerResponse>("", "POST", { body: obj });
+
+        Expect(response).toBeTruthy();
+        Expect(response.body).toBeTruthy();
+        Expect(response.headers).toBeTruthy();
+        Expect(response.headers[customHeaderKey.toLowerCase()]).toEqual(customHeaderVal);
+        Expect(response.headers[skippedHeaderKey.toLowerCase()]).not.toBeTruthy();
+        Expect(response.body.hello).toEqual(obj.hello);
+        Expect(response.body.foo).toEqual(obj.foo);
+        Expect(response.body.bar).toEqual(obj.bar);
+        Expect(Array.isArray(response.body.array)).toBe(true);
+        Expect(response.body.array.every(s => obj.array.indexOf(s) > -1)).toBe(true);
     }
 }
 

@@ -1,3 +1,4 @@
+import * as uriBuilder from 'urijs';
 import AxiosLib, { AxiosInstance, AxiosProxyConfig, AxiosResponse } from 'axios';
 import inspect from 'logspect';
 
@@ -51,14 +52,28 @@ export default abstract class BaseService {
      */
     protected async sendRequest<T>(path: string, method: "POST" | "PUT" | "GET" | "DELETE", data: RequestData = { }) {
         const { body, qs } = data;
-        const url = `${this.baseUrl}/${path}`.replace(/\/\/+/i, "/");
+        const url = new uriBuilder(this.baseUrl).path(path);
+        const headers = Object.getOwnPropertyNames(this.headers).reduce((result, key, index) => {
+            const value = this.headers[key];
+
+            // Don't include null or undefined header values, as they break Axios requests and throw an error.
+            if (value === undefined || value === undefined) {
+                inspect(`Header value for key ${key} is null or undefined. ${key} header will not be included in request.`);
+            } else {
+                result[key] = value;
+            }
+
+            return result;
+        }, { });
+
+        if (!!body) {
+            headers["Content-Type"] = "application/json";
+        }
+
         const request = this.Axios.request({
-            url,
-            method: method,
-            headers: {
-                ...this.headers,
-                "Content-Type": !!body ? "application/json" : undefined,
-            },
+            url: url.toString(),
+            method,
+            headers,
             params: qs,
             data: body,
         });
