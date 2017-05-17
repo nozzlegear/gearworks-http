@@ -61,9 +61,9 @@ export class MyClientClass extends BaseClient {
 
 The `this.sendRequest<T>` function returns a promise that can be awaited when using TypeScript or Babel, and will throw an `ApiError` when the server responds with a status code that isn't OK.
 
-### BaseClient.Constructor
+### BaseClient.constructor
 
-The abstract BaseClient class should be extended by your own custom API client classes. When extending the BaseClient, you need to call `super()` which accepts the following function:
+The abstract BaseClient class should be extended by your own custom API client classes. When extending the BaseClient, you need to call `super()` which accepts the following variables:
 
 |Variable|Type|Required|Description|Example|
 |--------|----|--------|-----------|-------|
@@ -176,6 +176,7 @@ export class MyClientClass extends BaseClient {
 
         return error;
     }
+}
 ```
 
 ### ApiError
@@ -186,6 +187,6 @@ The `ApiError` is a custom Error class that's returned by the `BaseClient.parseE
 |--------|----|-----------|-------|
 |`status_code`|number|The response status code.|500|
 |`status_text`|string|The status text corresponding with the `status_code`.|`"Internal Server Error"`.|
-|`unauthorized`|boolean|Indicates whether the response is a `401 unauthorized` response. Automatically set in the `ApiError` class constructor.|401|
+|`unauthorized`|boolean|Indicates whether the response is a `401 unauthorized` response. Automatically set in the `ApiError` class constructor.|false|
 |`message`|string|A message describing the error.|`"It's treason then."`|
 |`details`|any|A property set by the `BaseClient.parseErrorResponse` function that describes extra error details. May be null or undefined.|`{"sheev": "Are you threatening me, Master Jedi?"}`|
