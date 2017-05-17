@@ -41,7 +41,7 @@ export default abstract class BaseService {
         })
     }
 
-    private Axios: AxiosInstance;
+    protected Axios: AxiosInstance;
 
     /**
      * Sends a request to the target URL, parsing the response as JSON.
