@@ -5,6 +5,7 @@
   "main": "bin/index.js",
   "typings": "bin/index.d.ts",
   "scripts": {
+    "prebuild": "rimraf bin",
     "build": "tsc -p .",
     "prepublishOnly": "npm run build",
     "pretest": "npm run build",
@@ -42,6 +43,7 @@
     "boom": "^4.3.1",
     "gearworks-validation": "^1.0.0",
     "micro": "^7.3.3",
+    "rimraf": "^2.6.1",
     "tap-bark": "^1.0.0",
     "typescript": "^2.3.2"
   }
