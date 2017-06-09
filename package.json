@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "description": "A standardized HTTP client used by Gearworks apps, backed by Axios. Gearworks is the best way to get started with building Shopify apps!",
   "main": "bin/index.js",
+  "typings": "bin/index.d.ts",
   "scripts": {
     "build": "tsc -p .",
-    "prepublish": "npm run build",
+    "prepublishOnly": "npm run build",
     "pretest": "npm run build",
     "pretest:raw": "npm run build",
     "test": "alsatian -T ./bin/test.js | tap-bark",
