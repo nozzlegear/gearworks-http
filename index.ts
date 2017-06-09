@@ -18,6 +18,14 @@ export interface RequestData {
      * Json-serializable object that gets sent along with POST and PUT requests.
      */
     body?: any;
+    /**
+     * A handler called on upload progress events.
+     */
+    onUploadProgress?: (progressEvent: ProgressEvent) => void;
+    /**
+     * A handler called on download progress events.
+     */
+    onDownloadProgress?: (progressEvent: ProgressEvent) => void;
 }
 
 export class ApiError extends Error {
@@ -51,7 +59,6 @@ export default abstract class BaseService {
      * @param qsData (optional) A querystring-compatible object that gets sent along with all requests.
      */
     protected async sendRequest<T>(path: string, method: "POST" | "PUT" | "GET" | "DELETE", data: RequestData = { }) {
-        const { body, qs } = data;
         const url = new uriBuilder(this.baseUrl).path(path);
         const headers = Object.getOwnPropertyNames(this.headers).reduce((result, key, index) => {
             const value = this.headers[key];
@@ -66,7 +73,7 @@ export default abstract class BaseService {
             return result;
         }, { });
 
-        if (!!body) {
+        if (!! data.body) {
             headers["Content-Type"] = "application/json";
         }
 
@@ -74,8 +81,10 @@ export default abstract class BaseService {
             url: url.toString(),
             method,
             headers,
-            params: qs,
-            data: body,
+            params: data.qs,
+            data: data.body,
+            onDownloadProgress: data.onDownloadProgress,
+            onUploadProgress: data.onUploadProgress,
         });
 
         let result: AxiosResponse;
