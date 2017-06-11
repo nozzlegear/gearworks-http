@@ -7,6 +7,7 @@ import {
     AsyncTeardown,
     AsyncTest,
     Expect,
+    FocusTest,
     Test,
     TestFixture,
     Timeout
@@ -87,6 +88,32 @@ export class ClientTestFixture extends BaseClient {
         Expect(error).toBeTruthy();
         Expect(error.message).toEqual(validation.error.message);
         Expect(error.status).toEqual(boomError.output.statusCode);
+    }
+
+    @Test()
+    @FocusTest
+    public JoinsPaths() {
+        const path = this.joinUriPaths(this.baseUrl, "/api/v1/webhooks");
+        const path2 = this.joinUriPaths("/api/v1/webhooks");
+        const path3 = this.joinUriPaths("/api/v1/", "test");
+        const path4 = this.joinUriPaths("/api/v1/webhooks", "5.json");
+        const path5 = this.joinUriPaths("/api/v1/webhooks", ".json");
+        const path6 = this.joinUriPaths("/api/v1/webhooks", ".png");
+        const path7 = this.joinUriPaths("", "/api/v1/webhooks");
+        const path8 = this.joinUriPaths("", "", "/api/v1/webhooks");
+        const path9 = this.joinUriPaths("///", "/api/v1/webhooks");
+        const path10 = this.joinUriPaths("/", "/", "/api/v1/webhooks");
+
+        Expect(path).toEqual("https://example.com/api/v1/webhooks");
+        Expect(path2).toEqual("/api/v1/webhooks");
+        Expect(path3).toEqual("/api/v1/test");
+        Expect(path4).toEqual("/api/v1/webhooks/5.json");
+        Expect(path5).toEqual("/api/v1/webhooks.json");
+        Expect(path6).toEqual("/api/v1/webhooks.png");
+        Expect(path7).toEqual("/api/v1/webhooks");
+        Expect(path8).toEqual("/api/v1/webhooks");
+        Expect(path9).toEqual("/api/v1/webhooks");
+        Expect(path10).toEqual("/api/v1/webhooks");
     }
 }
 

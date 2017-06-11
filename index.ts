@@ -1,4 +1,4 @@
-import * as uriBuilder from 'urijs';
+import * as joinPaths from 'url-join';
 import AxiosLib, { AxiosInstance, AxiosProxyConfig, AxiosResponse } from 'axios';
 import inspect from 'logspect';
 
@@ -41,7 +41,7 @@ export class ApiError extends Error {
 }
 
 export default abstract class BaseService {
-    constructor(private baseUrl: string, private headers: {[key: string]: string} = {}, proxy?: AxiosProxyConfig) { 
+    constructor(protected baseUrl: string, protected headers: {[key: string]: string} = {}, proxy?: AxiosProxyConfig) { 
         this.Axios = AxiosLib.create({
             // Like fetch, Axios should never throw an error if it receives a response
             validateStatus: (status) => true,
@@ -52,6 +52,31 @@ export default abstract class BaseService {
     protected Axios: AxiosInstance;
 
     /**
+     * Joins URI paths into one single string, replacing bad slashes, and ensuring the path doesn't start with two or more slashes or end in /.extension.
+     */
+    protected joinUriPaths(...paths: string[]): string {
+        let path = joinPaths(...paths).replace(/\/\.json/ig, ".json");
+        const startsWithSlashes = /^\/{2,}/ig; // Checks if a string starts with 2 or more slashes
+
+        if (startsWithSlashes) {
+            path = path.replace(startsWithSlashes, "/");
+        }
+
+        // Check if the path ends with /.extension
+        if (/\/\.(\w)*$/i.test(path)) {
+            const letters = [...path];
+            const index = path.lastIndexOf("/");
+            
+            path = [
+                ...letters.slice(0, index),
+                ...letters.slice(index + 1)
+            ].join("");
+        }
+
+        return path;
+    }
+
+    /**
      * Sends a request to the target URL, parsing the response as JSON.
      * @param path The endpoint that the request should be sent to. Will be combined with the baseUrl.
      * @param method Method to use for the request. Must be upper-case.
@@ -59,7 +84,7 @@ export default abstract class BaseService {
      * @param qsData (optional) A querystring-compatible object that gets sent along with all requests.
      */
     protected async sendRequest<T>(path: string, method: "POST" | "PUT" | "GET" | "DELETE", data: RequestData = { }) {
-        const url = new uriBuilder(this.baseUrl).path(path);
+        const url = this.joinUriPaths(this.baseUrl, path);
         const headers = Object.getOwnPropertyNames(this.headers).reduce((result, key, index) => {
             const value = this.headers[key];
 

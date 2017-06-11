@@ -17,10 +17,6 @@
   version "10.3.2"
   resolved "https://registry.yarnpkg.com/@types/joi/-/joi-10.3.2.tgz#bc4ce6577c294710663d347ebe59087f375075a5"
 
-"@types/jquery@*":
-  version "2.0.45"
-  resolved "https://registry.yarnpkg.com/@types/jquery/-/jquery-2.0.45.tgz#cb99133aac1d997a820d6cf7258c91291c0a2adf"
-
 "@types/micro@^7.3.0":
   version "7.3.0"
   resolved "https://registry.yarnpkg.com/@types/micro/-/micro-7.3.0.tgz#fd8bf27b00396de0a5f50a739b44091c1b3002ba"
@@ -33,11 +29,9 @@
   version "7.0.18"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-7.0.18.tgz#cd67f27d3dc0cfb746f0bdd5e086c4c5d55be173"
 
-"@types/urijs@^1.15.32":
-  version "1.15.32"
-  resolved "https://registry.yarnpkg.com/@types/urijs/-/urijs-1.15.32.tgz#a6e261745eb580b3f7f4079dab520bd680b50755"
-  dependencies:
-    "@types/jquery" "*"
+"@types/url-join@^0.8.2":
+  version "0.8.2"
+  resolved "https://registry.yarnpkg.com/@types/url-join/-/url-join-0.8.2.tgz#1181ecbe1d97b7034e0ea1e35e62e86cc26b422d"
 
 alsatian@^1.3.1:
   version "1.3.1"
@@ -805,9 +799,9 @@ update-notifier@2.1.0:
     semver-diff "^2.0.0"
     xdg-basedir "^3.0.0"
 
-urijs@^1.18.10:
-  version "1.18.10"
-  resolved "https://registry.yarnpkg.com/urijs/-/urijs-1.18.10.tgz#b94463eaba59a1a796036a467bb633c667f221ab"
+url-join@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/url-join/-/url-join-2.0.2.tgz#c072756967ad24b8b59e5741551caac78f50b8b7"
 
 url-parse-lax@^1.0.0:
   version "1.0.0"
