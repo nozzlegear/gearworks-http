@@ -98,7 +98,7 @@ export default abstract class BaseService {
             return result;
         }, { });
 
-        if (!! data.body) {
+        if (!! data.body && data.body instanceof File === false) {
             headers["Content-Type"] = "application/json";
         }
 
