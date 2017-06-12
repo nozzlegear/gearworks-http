@@ -4,6 +4,9 @@
   "description": "A standardized HTTP client used by Gearworks apps, backed by Axios. Gearworks is the best way to get started with building Shopify apps!",
   "main": "bin/index.js",
   "typings": "bin/index.d.ts",
+  "files":[
+    "bin/index.*"
+  ],
   "scripts": {
     "prebuild": "rimraf bin",
     "build": "tsc -p .",
