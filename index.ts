@@ -1,5 +1,11 @@
 import * as joinPaths from 'url-join';
-import AxiosLib, { AxiosInstance, AxiosProxyConfig, AxiosResponse } from 'axios';
+import AxiosLib, {
+    AxiosInstance,
+    AxiosPromise,
+    AxiosProxyConfig,
+    AxiosRequestConfig,
+    AxiosResponse
+    } from 'axios';
 import inspect from 'logspect';
 
 /**
@@ -9,15 +15,11 @@ export function isOkay(response: AxiosResponse) {
     return response && response.status >= 200 && response.status < 300;
 }
 
-export interface RequestData {
+export interface FileRequestData{
     /**
      * Querystring-compatible object that gets sent along with all requests.
      */
     qs?: any;
-    /**
-     * Json-serializable object that gets sent along with POST and PUT requests.
-     */
-    body?: any;
     /**
      * A handler called on upload progress events.
      */
@@ -27,6 +29,15 @@ export interface RequestData {
      */
     onDownloadProgress?: (progressEvent: ProgressEvent) => void;
 }
+
+export interface RequestData extends FileRequestData {
+    /**
+     * Data that gets sent along as the request body with POST and PUT requests.
+     */
+    body?: any;
+}
+
+export type RequestMethod = "POST" | "PUT" | "GET" | "DELETE";
 
 export class ApiError extends Error {
     constructor(public status: number, public status_text: string, message: string = "Something went wrong and your request could not be completed.") {
@@ -76,15 +87,7 @@ export default abstract class BaseService {
         return path;
     }
 
-    /**
-     * Sends a request to the target URL, parsing the response as JSON.
-     * @param path The endpoint that the request should be sent to. Will be combined with the baseUrl.
-     * @param method Method to use for the request. Must be upper-case.
-     * @param bodyData (optional) A json-serializable object that gets sent along with POST and PUT requests.
-     * @param qsData (optional) A querystring-compatible object that gets sent along with all requests.
-     */
-    protected async sendRequest<T>(path: string, method: "POST" | "PUT" | "GET" | "DELETE", data: RequestData = { }) {
-        const url = this.joinUriPaths(this.baseUrl, path);
+    private buildHeaders() {
         const headers = Object.getOwnPropertyNames(this.headers).reduce((result, key, index) => {
             const value = this.headers[key];
 
@@ -98,20 +101,11 @@ export default abstract class BaseService {
             return result;
         }, { });
 
-        if (!! data.body && data.body instanceof File === false) {
-            headers["Content-Type"] = "application/json";
-        }
+        return headers;
+    }
 
-        const request = this.Axios.request({
-            url: url.toString(),
-            method,
-            headers,
-            params: data.qs,
-            data: data.body,
-            onDownloadProgress: data.onDownloadProgress,
-            onUploadProgress: data.onUploadProgress,
-        });
-
+    private async completeRequest<T>(config: AxiosRequestConfig): Promise<T> {
+        const request = this.Axios.request(config);
         let result: AxiosResponse;
         let resultBody: T;
 
@@ -121,7 +115,7 @@ export default abstract class BaseService {
         }
         catch (e) {
             // Axios was configured to only throw an error when a network error is encountered.
-            inspect(`There was a problem the fetch operation for ${url}`, e);
+            inspect(`There was a problem the fetch operation for ${config.url}`, e);
 
             const error = this.parseErrorResponse(resultBody, result);
 
@@ -135,6 +129,66 @@ export default abstract class BaseService {
         }
 
         return resultBody;
+    }
+
+    /**
+     * Sends a request to the target URL, parsing the response as JSON.
+     * @param path The endpoint that the request should be sent to. Will be combined with the baseUrl.
+     * @param method Method to use for the request. Must be upper-case.
+     * @param data (optional) A RequestData object that configures request options, including querystring and request body objects.
+     */
+    protected async sendRequest<T>(path: string, method: RequestMethod, config: RequestData = { }): Promise<T> {
+        const headers = this.buildHeaders();
+        const url = this.joinUriPaths(this.baseUrl, path);
+
+        if (!! config.body) {
+            headers["Content-Type"] = "application/json";
+        }
+
+        return await this.completeRequest<T>({
+            url: url.toString(),
+            method,
+            headers,
+            params: config.qs,
+            data: config.body,
+            onDownloadProgress: config.onDownloadProgress,
+            onUploadProgress: config.onUploadProgress,
+        })
+    }
+
+    /**
+     * Like sendRequest, but specifically meant for uploading files. 
+     * @param path The endpoint that the request should be sent to. Will be combined with the baseUrl.
+     * @param method Method to use for the request. Must be upper-case.
+     * @param files An object containing the files being uploaded. Its keys are each mapped to a file, e.g. { file_1: File, file_2: File }.
+     * @param config A RequestData object that configures request options, including querystring and request body objects.
+     */
+    protected async sendFiles<T>(path: string, method: RequestMethod, files: { [file_name: string]: File }, config: FileRequestData): Promise<T> {
+        // Axios relies on the browser to properly set the content-type header for FormData objects. 
+        // We absolutely should not set it ourselves.
+        const headers = this.buildHeaders();
+        const url = this.joinUriPaths(this.baseUrl, path);
+        const formData = new FormData();
+
+        Object.keys(files).forEach(key => {
+            const file = files[key];
+            
+            if (file instanceof File === false) {
+                inspect("gearworks-http's sendFiles function has detected an value that wasn't a file. This may cause problems.", {[key]: file});
+            }
+
+            formData.append(key, file);
+        });
+        
+        return await this.completeRequest<T>({
+            url: url.toString(),
+            method,
+            headers,
+            params: config.qs,
+            data: formData,
+            onDownloadProgress: config.onDownloadProgress,
+            onUploadProgress: config.onUploadProgress,
+        })
     }
 
     /**
