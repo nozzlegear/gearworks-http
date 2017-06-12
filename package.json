@@ -31,7 +31,8 @@
   "homepage": "https://github.com/nozzlegear/gearworks-http#readme",
   "dependencies": {
     "axios": "^0.16.1",
-    "logspect": "^1.0.2"
+    "logspect": "^1.0.2",
+    "url-join": "^2.0.2"
   },
   "devDependencies": {
     "@types/boom": "^4.3.2",
@@ -44,7 +45,6 @@
     "micro": "^7.3.3",
     "rimraf": "^2.6.1",
     "tap-bark": "^1.0.0",
-    "typescript": "^2.3.2",
-    "url-join": "^2.0.2"
+    "typescript": "^2.3.2"
   }
 }
