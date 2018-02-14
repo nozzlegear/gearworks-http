@@ -51,7 +51,7 @@ export class ApiError extends Error {
     public details?: any;
 }
 
-export default abstract class BaseService {
+export default class BaseService {
     constructor(protected baseUrl: string, protected headers: {[key: string]: string} = {}, proxy?: AxiosProxyConfig) { 
         this.Axios = AxiosLib.create({
             // Like fetch, Axios should never throw an error if it receives a response
