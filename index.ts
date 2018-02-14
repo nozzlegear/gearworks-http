@@ -65,7 +65,7 @@ export default class BaseService {
     /**
      * Joins URI paths into one single string, replacing bad slashes, and ensuring the path doesn't start with two or more slashes or end in /.extension.
      */
-    protected joinUriPaths(...paths: string[]): string {
+    joinUriPaths(...paths: string[]): string {
         let path = joinPaths(...paths).replace(/\/\.json/ig, ".json");
         const startsWithSlashes = /^\/{2,}/ig; // Checks if a string starts with 2 or more slashes
 
@@ -137,7 +137,7 @@ export default class BaseService {
      * @param method Method to use for the request. Must be upper-case.
      * @param data (optional) A RequestData object that configures request options, including querystring and request body objects.
      */
-    protected async sendRequest<T>(path: string, method: RequestMethod, config: RequestData = { }): Promise<T> {
+    async sendRequest<T>(path: string, method: RequestMethod, config: RequestData = { }): Promise<T> {
         const headers = this.buildHeaders();
         const url = this.joinUriPaths(this.baseUrl, path);
 
@@ -163,7 +163,7 @@ export default class BaseService {
      * @param files An object containing the files being uploaded. Its keys are each mapped to a file, e.g. { file_1: File, file_2: File }.
      * @param config A RequestData object that configures request options, including querystring and request body objects.
      */
-    protected async sendFiles<T>(path: string, method: RequestMethod, files: { [file_name: string]: File }, config: FileRequestData): Promise<T> {
+    async sendFiles<T>(path: string, method: RequestMethod, files: { [file_name: string]: File }, config: FileRequestData): Promise<T> {
         // Axios relies on the browser to properly set the content-type header for FormData objects. 
         // We absolutely should not set it ourselves.
         const headers = this.buildHeaders();
@@ -198,7 +198,7 @@ export default class BaseService {
      * @param body The response body returned by Axios. May be a string or a JS object.
      * @param axiosResponse The Axios response object.
      */
-    protected parseErrorResponse(body?: string | Object, axiosResponse?: AxiosResponse) {
+    parseErrorResponse(body?: string | Object, axiosResponse?: AxiosResponse) {
         if (!!axiosResponse) {
             const error = new ApiError(axiosResponse.status, axiosResponse.statusText);
 
