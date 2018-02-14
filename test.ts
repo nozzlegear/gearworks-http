@@ -91,7 +91,6 @@ export class ClientTestFixture extends BaseClient {
     }
 
     @Test()
-    @FocusTest
     public JoinsPaths() {
         const path = this.joinUriPaths(this.baseUrl, "/api/v1/webhooks");
         const path2 = this.joinUriPaths("/api/v1/webhooks");
@@ -135,7 +134,7 @@ export class OverriddenClientTestFixture extends BaseClient {
         return "I AM THE SENATE.";
     }
 
-    protected parseErrorResponse(body?: string | Object, axiosResponse?: AxiosResponse) {
+    parseErrorResponse(body?: string | Object, axiosResponse?: AxiosResponse) {
         return new ApiError(this.status, this.description, this.message);
     }
 
